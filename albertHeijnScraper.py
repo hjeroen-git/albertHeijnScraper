@@ -158,7 +158,6 @@ def save_products_to_html(products_df):
 
 
 def get_product_info(url):
-    url = 'https://www.ah.nl/producten/product/wi137741/coca-cola-zero-sugar'
     req = requests.get(url)
     soup = BeautifulSoup(req.text,features="html.parser")
 
