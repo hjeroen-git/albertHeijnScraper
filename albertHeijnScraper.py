@@ -145,8 +145,76 @@ def get_all_products():
     return product_df
 
 
+def search_product(searchstr):
+    url = 'https://www.ah.nl/zoeken?query=' + searchstr.replace(' ','%20')
+    return product_dict_to_df(get_products_from_pageset(url))
+
+
 def save_products_to_html(products_df):
     products_df['link'] = products_df['link'].apply(lambda x: '<a href="{0}">link</a>'.format(x))
     f = open('AH_prod.html','w')
     f.write(products_df.to_html(escape=False))
     f.close()
+
+
+def get_product_info(url):
+    url = 'https://www.ah.nl/producten/product/wi137741/coca-cola-zero-sugar'
+    req = requests.get(url)
+    soup = BeautifulSoup(req.text,features="html.parser")
+
+    # name
+    name = soup.find_all(class_="product-card-header_root__1GTl1")[0].find('h1').find('span').contents[0]
+
+    # unit_price
+    if len(soup.find_all(class_="product-card-header_unitPriceWithPadding__MonzR")) == 0:
+        unit_price = ''
+    else:
+        unit_price = ''.join(soup.find_all(class_="product-card-header_unitPriceWithPadding__MonzR")[0].contents)
+
+    # unit
+    unit = soup.find_all(class_="product-card-header_unitInfo__2ncbP")[0].contents[0]
+
+    # price
+    is_promo_tag = soup.find_all(class_="price-amount_root__vE9dJ price-amount_was__1MqPG product-card-hero-price_was__1ZNtq")
+    if len(is_promo_tag) == 0:
+        promo = False
+        pricetag_orig = soup.find_all(class_="price-amount_root__vE9dJ product-card-hero-price_now__PlF9u")[0]
+        price_orig = float(''.join([s.contents[0] for s in pricetag_orig.find_all('span')]))
+        price_promo = np.nan
+    else:
+        promo = True
+        pricetag_promo = soup.find_all(class_="price-amount_root__vE9dJ price-amount_bonus__xJzk1 product-card-hero-price_now__PlF9u")[0]
+        pricetag_orig = soup.find_all(class_="price-amount_root__vE9dJ price-amount_was__1MqPG product-card-hero-price_was__1ZNtq")[0]
+        price_orig = float(''.join([s.contents[0] for s in pricetag_orig.find_all('span')]))
+        price_promo = float(''.join([s.contents[0] for s in pricetag_promo.find_all('span')]))
+
+    # summary
+    summary_tag = soup.find_all(class_="product-summary")
+    summary = summary_tag[0].find('p').contents[0]
+    summary_detail = [s.contents[0] for s in summary_tag[0].find_all('li')]
+
+    # ingredients
+    ingredients_block = soup.find_all(class_="product-info-content-block product-info-ingredients")
+    if len(ingredients_block) != 0:
+        ingredients = soup.find_all(class_="product-info-content-block product-info-ingredients")[0].find('p').contents[0]
+    else:
+        ingredients = ''
+
+    # nutritional info
+    nutri_tag = soup.find(class_="product-info-nutritions__table")
+    nutri_unit = nutri_tag.find_all('th')[1].contents[0]
+    keys = [nt.find_all()[0].contents[0] for nt in nutri_tag.find_all('tr')]
+    values = [nt.find_all()[1].contents[0] for nt in nutri_tag.find_all('tr')]
+    nutritional_info = dict(zip(keys, values))
+
+    return {'name':name,
+            'unit_price': unit_price,
+            'unit': unit,
+            'is_promo': promo,
+            'price_original': price_orig,
+            'price_promo': price_promo,
+            'summary': summary,
+            'summary_detail': summary_detail,
+            'ingredients': ingredients,
+            'nutritional_info': nutritional_info,
+            'link': url}
