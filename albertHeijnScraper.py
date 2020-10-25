@@ -201,10 +201,13 @@ def get_product_info(url):
 
     # nutritional info
     nutri_tag = soup.find(class_="product-info-nutritions__table")
-    nutri_unit = nutri_tag.find_all('th')[1].contents[0]
-    keys = [nt.find_all()[0].contents[0] for nt in nutri_tag.find_all('tr')]
-    values = [nt.find_all()[1].contents[0] for nt in nutri_tag.find_all('tr')]
-    nutritional_info = dict(zip(keys, values))
+    if nutri_tag != None:
+        nutri_unit = nutri_tag.find_all('th')[1].contents[0]
+        keys = [nt.find_all()[0].contents[0] for nt in nutri_tag.find_all('tr')]
+        values = [nt.find_all()[1].contents[0] for nt in nutri_tag.find_all('tr')]
+        nutritional_info = dict(zip(keys, values))
+    else:
+        nutritional_info = ''
 
     return {'name':name,
             'unit_price': unit_price,
