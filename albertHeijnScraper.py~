@@ -86,7 +86,7 @@ def get_products_from_page(url, label=''):
 
         # URL
         try:
-            product_dict['link'] = str('https://www.ah.nl' + product_tag.find_all('a')[0]['href'])
+            product_dict['link'] = str('https://www.ah.nl' + product_tag.find_all('a', class_="link_root__fmxIo")[0]['href'])
         except:
             product_dict['link'] = ''
 
