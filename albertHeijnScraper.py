@@ -223,5 +223,5 @@ def get_product_info(url):
             'link': url}
 
 if __name__=='__main__':
-    df = product_dict_to_df(get_products_from_categories([get_categories()[0]]))
-    print(df)
+    df = product_dict_to_df(get_products_from_categories(get_categories()))
+    df.to_csv("exports/" + pd.datetime.today().strftime("%Y_%m_%d") + ".csv")
